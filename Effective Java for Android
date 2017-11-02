@@ -1,0 +1,91 @@
+原版网址：
+https://guides.codepath.com/android/Effective-Java-for-Android
+
+概述：
+这篇文章的目的是作为这篇博文的开源版本，而netcyrax是该指南的原始文章的唯一作者。
+请在下面添加您自己的在Android中Java最佳实践、技巧和巧妙！
+
+建造者模式
+当你拥有一个需要超过3个构造函数参数的对象时，使用建造者模式来构造对象。写起了肯有点冗长，但是它具有很好的扩展性和可读性。如果你正在创建一个模型类，请考使用AutoValue Library。
+Class Movie {
+Static class Builder {
+String title;
+Builder withTitle(String title) {
+this.title = title;
+return this;
+}
+Movie build() {
+return new Movie(title);
+}
+
+Privete Movie(String title) {
+[...]
+}
+}
+//向下面这样使用
+Movie matrix = new Movie.Builder().withTitle(“The Matrix”).build();
+
+静态工厂方法
+使用静态方法（和一个私有的构造方法）代替new关键字和构造方法。这个工厂方法的任务是，不要求在每次调用的时候（在有条件的情况下）返回一个新的对象实例，而且可以根据需要返回不同的子类型的实例。例如java.util.Calender.java类中的静态工厂方法getInstance（）的多个重写的方法。关于静态工厂方法更多的资料可以参考：https://stackoverflow.com/questions/929021/what-are-static-factory-methods。
+Class Movie {
+[...]
+public static Movie create(String title) {
+return new Movie(title);
+}
+}
+
+内部静态类
+如果你定义了一个没有依赖外部类的内部类，要记得将内部类定义为静态的。这样做内部类的实例就不会持有外部类的引用了。
+
+class Movie {
+[..]
+static class MovieAward {
+[..]
+}
+}
+
+返回空集合
+当我们必须返回一个空的集合或者列表时需要避免返回null。返回一个空集合可以使接口变得更加简单（不需要对空返回的方法写文档和注释）并且避免偶然的空指针异常。这时返回一个相同的空集合比创建一个新的集合更好。关于空集合更多的资料可以参考：http://blog.csdn.net/qq_32364027/article/details/51354035。
+List<Movie> latestMovies() {
+if(db.query.isEmpty()) {
+return Collections.emptyList();
+}
+[...]
+}
+
+使用StringBuilder
+在连接少量字符串的时候，可以使用“+”操作符。但是在连接大量的字符串时最好使用StringBuilder。
+String latestMovieOneListener(List<Movie> movies) {
+StringBuilder sb = new StringBuilder();
+for(Movie movie : movies) {
+sb.append(movie);
+}
+return sb.toString();
+}
+
+强制不实例化
+如果你想强制一个对象不能（通过new关键字）实例化，可以使用“private”修饰构造方法。这种情况特别适用于只包含静态方法的功能类。
+class moveUtils {
+private MoveUtils() {}
+static String titleAndYear(Movie movie) {
+[...]
+}
+}
+
+避免不稳的性
+不可变是一个对象在整个生命周期内保持不变。对象的所有的必需数据都是在对象被实例化期间提供的。这种方法有很多优点，不然简单性，线程安全性和可共享性。
+
+class Movie {
+[..]
+Movie sequel() {
+return Movie.create(this.title + “ 2”);
+}
+}
+//象下面这样使用
+Movie toyStory = Movie.create(“Toy Stroy”);
+Movie toyStory2 = toyStory.sequel();
+使每个类都具有不可变性可能会很困难。所以应该让你的类尽可能的不可变（例如，使用private final 修饰成员变量或者使用final修饰类）。在移动设备上应用程序创建一个对象是很昂贵的，因此不宜过度的创建对象。
+
+引用：
+https://medium.com/rocknnull/effective-java-for-android-cheatsheet-bf4e3433889a#.u1xjikhk7
+https://www.amazon.com/Effective-Java-2nd-Joshua-Bloch/dp/0321356683
